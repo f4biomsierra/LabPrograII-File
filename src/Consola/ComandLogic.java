@@ -84,7 +84,15 @@ public class ComandLogic {
             return cmdBack();
         }
 
-        File newRuta = new File(ruta, nombre);
+        File newRuta;
+        
+        if (nombre.length() >= 2 && 
+            ((nombre.charAt(1) == ':' && Character.isLetter(nombre.charAt(0))) || 
+             nombre.startsWith("\\\\"))) {
+            newRuta = new File(nombre);
+        } else {
+            newRuta = new File(ruta, nombre);
+        }
 
         try {
             File canonicalRuta = newRuta.getCanonicalFile();
