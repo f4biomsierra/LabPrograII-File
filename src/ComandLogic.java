@@ -85,16 +85,16 @@ public class ComandLogic {
     } 
     
     public String cmdDir(){
-        String resultado="";
+        String contenido="";
         File[] lista=ruta.listFiles();
         if(lista!=null){
-            for(File file: lista){
-                String prefijo=file.isDirectory() ? "<DIR> " : "      ";
-                resultado=resultado + prefijo + file.getName() + "\n";
+            for(File files : lista){
+                contenido = contenido + (files.isDirectory() ? "[DIR] " : "[FILE] ") + files.getName() + "\n";
             }
         }
-        return resultado;
+        return contenido;
     }
+    
     
     public String cmdDate(){
         Date fechaObjeto = new Date();
