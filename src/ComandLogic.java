@@ -1,3 +1,6 @@
+
+import java.io.File;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -14,16 +17,84 @@ public class ComandLogic {
         ruta=new File(System.getProperty("user.home"));
     }
     
+    public String cmdMkdir(String nombre){
+        if(nombre.isEmpty())
+            return "Uso: MKdir <nombre>";
+        File dir=new File(ruta, nombre);
+        if(dir.mkdir())
+            return "Carpeta "+nombre+" creada exitosamente.";
+        
+        return "No se pudo crear carpeta: "+nombre+". Revisar si la carpeta ya existe.";
+        
+    }
+    
+    public String cmdMfile(String nombre){
+        if(nombre.isEmpty())
+            return "Uso: MKdir <nombre.ext>";
+        File file=new File(ruta, nombre);
+        try{
+            if(file.createNewFile()){
+                return "Archivo "+nombre+" creado exitosamete.";
+            }
+            else{
+                return "Archivo "+nombre+" ya existe.";
+            }
+            
+        }catch(IOException e){
+            return "Error al crear el Archivo:"+e.getMessage();
+        }
+    }
+    
+    public String cmdRm(String nombre){
+        if(nombre.isEmpty())
+            return "Uso: Rm <nombre>";
+        File deleted=new File(ruta, nombre);
+        if(deleteRecursive(deleted)){
+            return nombre+" eliminado exitosamete.";
+        }else{
+            return nombre+" no se pudo eliminar.";
+        }
+        
+        
+    }
+     private boolean deleteRecursive(File file){
+        if (file.isDirectory()){
+            File[] files=file.listFiles();
+            if (files!=null)
+                for (File f:files) 
+                    deleteRecursive(f);
+        }
+        return file.delete();
+    }
+    public String cmdCd(String nombre){
+        if (nombre.isEmpty()) return "Uso: Cd <nombre carpeta>";
+        File newRuta=new File(ruta, nombre);
+        if (newRuta.exists() && newRuta.isDirectory()){
+            ruta=newRuta;
+            return "";
+        }
+        return "No se encontro la carpeta "+nombre+".";
+    }
+    public String cmdBack(){
+        File parent = ruta.getParentFile();
+        if (parent!=null){
+            ruta=parent;
+            return "";
+        }
+        return "Ya se encuentra en el directorio raiz.";
+    } 
+    
     public String cmdDir(){
         String contenido="";
         File[] lista=ruta.listFiles();
         if(lista!=null){
-            for(File file: lista){
-                contenido = contenido + (file.isDirectory() ? "[DIR] " : "[FILE] ") + file.getName() + "\n";
+            for(File files : lista){
+                contenido = contenido + (files.isDirectory() ? "[DIR] " : "[FILE] ") + files.getName() + "\n";
             }
         }
         return contenido;
     }
+    
     
     public String cmdDate(){
         Date fechaObjeto = new Date();
@@ -71,4 +142,16 @@ public class ComandLogic {
         return archivo.exists();
     }
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+ 
+   
 }
