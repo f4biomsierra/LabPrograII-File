@@ -1,6 +1,9 @@
-import Consola.ComandLogic;
+package ui;
 import javax.swing.*;
 import javax.swing.text.*;
+
+import Consola.ComandLogic;
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -188,9 +191,6 @@ public class ConsolaPanel extends JPanel {
         String comandoPrincipal = partes[0].trim();
         String argumento = partes.length > 1 ? partes[1].trim() : "";
         
-        // Debug: verificar qué comando se está parseando
-        // System.out.println("Comando parseado: '" + comandoPrincipal + "' con argumento: '" + argumento + "'");
-        
         switch (comandoPrincipal) {
             case "Cd":
                 if (argumento.isEmpty()) {
@@ -253,8 +253,9 @@ public class ConsolaPanel extends JPanel {
                 }
                 archivoEscritura = argumento;
                 modoEscritura = true;
-                ultimaPosicionEscritura = doc.getLength();
                 append("Escribiendo en " + argumento + ". Escriba EXIT para terminar.\n");
+                // Establecer la posición DESPUÉS del mensaje para que no se guarde en el archivo
+                ultimaPosicionEscritura = doc.getLength();
                 promptStartPosition = doc.getLength();
                 break;
             case "Rd":

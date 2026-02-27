@@ -1,5 +1,5 @@
 package Consola;
-
+import ui.MainFrame;
 
 public class Main {
     

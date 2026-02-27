@@ -1,3 +1,4 @@
+package ui;
 import Consola.ComandLogic;
 import Consola.Paneles;
 import javax.swing.JFrame;
