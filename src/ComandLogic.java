@@ -1,5 +1,5 @@
 
-import java.io.File;
+
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -7,8 +7,12 @@ import java.io.File;
  * and open the template in the editor.
  */
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Date;
+import java.io.FileReader;
 
 public class ComandLogic {
     private File ruta=null;
