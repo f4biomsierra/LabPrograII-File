@@ -152,6 +152,15 @@ public class ConsolaPanel extends JPanel {
             String comando = "";
             if (ultimaLinea.startsWith(prompt)) {
                 comando = ultimaLinea.substring(prompt.length()).trim();
+            } else {
+                // Si no empieza con el prompt, intentar extraer el comando de otra forma
+                // Buscar el último ">" y tomar lo que viene después
+                int indicePrompt = ultimaLinea.lastIndexOf(">");
+                if (indicePrompt >= 0 && indicePrompt < ultimaLinea.length() - 1) {
+                    comando = ultimaLinea.substring(indicePrompt + 1).trim();
+                } else {
+                    comando = ultimaLinea.trim();
+                }
             }
             
             append("\n");
@@ -175,13 +184,16 @@ public class ConsolaPanel extends JPanel {
         }
         
         String[] partes = comando.split(" ", 2);
-        String comandoPrincipal = partes[0].toLowerCase();
+        String comandoPrincipal = partes[0].trim();
         String argumento = partes.length > 1 ? partes[1].trim() : "";
         
+        // Debug: verificar qué comando se está parseando
+        // System.out.println("Comando parseado: '" + comandoPrincipal + "' con argumento: '" + argumento + "'");
+        
         switch (comandoPrincipal) {
-            case "cd":
+            case "Cd":
                 if (argumento.isEmpty()) {
-                    append("Uso: cd <nombre carpeta>\n");
+                    append("Uso: Cd <nombre carpeta>\n");
                     break;
                 }
                 String resultadoCd = comandLogic.cmdCd(argumento);
@@ -191,7 +203,7 @@ public class ConsolaPanel extends JPanel {
                     append(resultadoCd + "\n");
                 }
                 break;
-            case "<...>":
+            case "...":
                 String resultadoBack = comandLogic.cmdBack();
                 if (resultadoBack.isEmpty()) {
                     actualRoute = comandLogic.getRuta();
@@ -199,39 +211,39 @@ public class ConsolaPanel extends JPanel {
                     append(resultadoBack + "\n");
                 }
                 break;
-            case "dir":
+            case "Dir":
                 append(comandLogic.cmdDir());
                 break;
-            case "date":
+            case "Date":
                 append(comandLogic.cmdDate() + "\n");
                 break;
-            case "time":
+            case "Time":
                 append(comandLogic.cmdHora() + "\n");
                 break;
-            case "mkdir":
+            case "Mkdir":
                 if (argumento.isEmpty()) {
-                    append("Uso: mkdir <nombre>\n");
+                    append("Uso: Mkdir <nombre>\n");
                     break;
                 }
                 append(comandLogic.cmdMkdir(argumento) + "\n");
                 break;
-            case "mfile":
+            case "Mfile":
                 if (argumento.isEmpty()) {
-                    append("Uso: mfile <nombre.ext>\n");
+                    append("Uso: Mfile <nombre.ext>\n");
                     break;
                 }
                 append(comandLogic.cmdMfile(argumento) + "\n");
                 break;
-            case "rm":
+            case "Rm":
                 if (argumento.isEmpty()) {
-                    append("Uso: rm <nombre>\n");
+                    append("Uso: Rm <nombre>\n");
                     break;
                 }
                 append(comandLogic.cmdRm(argumento) + "\n");
                 break;
-            case "wr":
+            case "Wr":
                 if (argumento.isEmpty()) {
-                    append("Uso: wr <archivo.ext>\n");
+                    append("Uso: Wr <archivo.ext>\n");
                     break;
                 }
                 if (!comandLogic.verificarExistencia(argumento)) {
@@ -244,16 +256,23 @@ public class ConsolaPanel extends JPanel {
                 append("Escribiendo en " + argumento + ". Escriba EXIT para terminar.\n");
                 promptStartPosition = doc.getLength();
                 break;
-            case "rd":
+            case "Rd":
+                // Asegurar que no estamos en modo escritura
+                modoEscritura = false;
                 if (argumento.isEmpty()) {
-                    append("Uso: rd <archivo.ext>\n");
+                    append("Uso: Rd <archivo.ext>\n");
                     break;
                 }
                 if (!comandLogic.verificarExistencia(argumento)) {
                     append("El archivo '" + argumento + "' no existe.\n");
                     break;
                 }
-                append(comandLogic.leerRd(argumento));
+                String contenido = comandLogic.leerRd(argumento);
+                if (contenido != null && !contenido.isEmpty()) {
+                    append(contenido);
+                } else {
+                    append("El archivo está vacío.\n");
+                }
                 break;
             default:
                 append("'" + comando + "' no se reconoce como un comando.\n");
