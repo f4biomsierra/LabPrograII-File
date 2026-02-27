@@ -171,6 +171,8 @@ public class ConsolaPanel extends JPanel {
             
             manejarComando(comando);
             
+            append("\n");
+            
             if (!modoEscritura) {
                 imprimirPrompt();
             } else {

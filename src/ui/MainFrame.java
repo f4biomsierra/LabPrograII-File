@@ -11,7 +11,7 @@ public class MainFrame extends JFrame {
     private ComandLogic comandLogic;
     public MainFrame() { 
         comandLogic = new ComandLogic();
-        setTitle("Main Frame");
+        setTitle("Administrator: Command Prompt");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
