@@ -10,6 +10,10 @@ public class ConsolaPanel extends JPanel {
     private StyledDocument doc;
     private String actualRoute;
     private ComandLogic comandLogic;
+    private int promptStartPosition = 0;
+    private boolean modoEscritura = false;
+    private String archivoEscritura = "";
+    private int ultimaPosicionEscritura = 0;
 
     public ConsolaPanel(ComandLogic comandLogic) {
         this.comandLogic = comandLogic;
@@ -23,6 +27,29 @@ public class ConsolaPanel extends JPanel {
         console.setFont(new Font("Consolas", Font.PLAIN, 14));
 
         doc = console.getStyledDocument();
+        
+        ((AbstractDocument) doc).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (offset >= promptStartPosition) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
+                if (offset >= promptStartPosition) {
+                    super.remove(fb, offset, length);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (offset >= promptStartPosition) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
 
         JScrollPane scroll = new JScrollPane(console);
         scroll.setBorder(null);
@@ -37,6 +64,25 @@ public class ConsolaPanel extends JPanel {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     e.consume();
                     ejecutarComando();
+                } else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+                    int caretPos = console.getCaretPosition();
+                    if (caretPos <= promptStartPosition) {
+                        e.consume();
+                    }
+                } else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    int caretPos = console.getCaretPosition();
+                    if (caretPos < promptStartPosition) {
+                        e.consume();
+                    }
+                } else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                    int caretPos = console.getCaretPosition();
+                    if (caretPos <= promptStartPosition && e.isControlDown() == false) {
+                        e.consume();
+                        console.setCaretPosition(promptStartPosition);
+                    }
+                } else if (e.getKeyCode() == KeyEvent.VK_HOME) {
+                    e.consume();
+                    console.setCaretPosition(promptStartPosition);
                 }
             }
 
@@ -55,6 +101,8 @@ public class ConsolaPanel extends JPanel {
 
     private void imprimirPrompt() {
         append(actualRoute + ">");
+        promptStartPosition = doc.getLength();
+        console.setCaretPosition(doc.getLength());
     }
 
     private void append(String text) {
@@ -77,9 +125,29 @@ public class ConsolaPanel extends JPanel {
         try {
             String textoCompleto = doc.getText(0, doc.getLength());
             String[] lineas = textoCompleto.split("\n");
-            
             String ultimaLinea = lineas[lineas.length - 1];
-            
+
+            if (modoEscritura) {
+                int posicionActual = doc.getLength();
+                String textoNuevo = doc.getText(ultimaPosicionEscritura, posicionActual - ultimaPosicionEscritura);
+                String textoIngresado = textoNuevo.trim();
+                
+                append("\n");
+                if (textoIngresado.equals("EXIT")) {
+                    modoEscritura = false;
+                    append("Escritura finalizada.\n");
+                    promptStartPosition = doc.getLength();
+                } else if (!textoIngresado.isEmpty()) {
+                    comandLogic.escribirWr(archivoEscritura, textoIngresado);
+                }
+                ultimaPosicionEscritura = doc.getLength();
+                if (!modoEscritura) {
+                    imprimirPrompt();
+                }
+                console.setCaretPosition(doc.getLength());
+                return;
+            }
+
             String prompt = actualRoute + ">";
             String comando = "";
             if (ultimaLinea.startsWith(prompt)) {
@@ -90,7 +158,12 @@ public class ConsolaPanel extends JPanel {
             
             manejarComando(comando);
             
-            imprimirPrompt();
+            if (!modoEscritura) {
+                imprimirPrompt();
+            } else {
+                promptStartPosition = doc.getLength();
+            }
+            console.setCaretPosition(doc.getLength());
         } catch (BadLocationException e) {
             e.printStackTrace();
         }
@@ -101,45 +174,90 @@ public class ConsolaPanel extends JPanel {
             return;
         }
         
-        String[] partes = comando.split(" ");
+        String[] partes = comando.split(" ", 2);
         String comandoPrincipal = partes[0].toLowerCase();
-        String[] argumentos = new String[partes.length - 1];
-        if (argumentos.length > 0) {
-            System.arraycopy(partes, 1, argumentos, 0, argumentos.length);
-        }
+        String argumento = partes.length > 1 ? partes[1].trim() : "";
         
         switch (comandoPrincipal) {
             case "cd":
-                if (argumentos.length == 0 || argumentos[0].isEmpty()) {
+                if (argumento.isEmpty()) {
                     append("Uso: cd <nombre carpeta>\n");
                     break;
                 }
-                String resultado = comandLogic.cmdCd(argumentos[0]);
-                if (resultado.isEmpty()) {
+                String resultadoCd = comandLogic.cmdCd(argumento);
+                if (resultadoCd.isEmpty()) {
                     actualRoute = comandLogic.getRuta();
                 } else {
-                    append(resultado + "\n");
+                    append(resultadoCd + "\n");
+                }
+                break;
+            case "<...>":
+                String resultadoBack = comandLogic.cmdBack();
+                if (resultadoBack.isEmpty()) {
+                    actualRoute = comandLogic.getRuta();
+                } else {
+                    append(resultadoBack + "\n");
                 }
                 break;
             case "dir":
-                append(comandLogic.cmdDir().toLowerCase());
+                append(comandLogic.cmdDir());
                 break;
             case "date":
-                comandLogic.cmdDate().toLowerCase();
+                append(comandLogic.cmdDate() + "\n");
                 break;
-            case "hora":
-                comandLogic.cmdHora().toLowerCase();
+            case "time":
+                append(comandLogic.cmdHora() + "\n");
                 break;
             case "mkdir":
-                comandLogic.cmdMkdir(argumentos[0].toLowerCase());
+                if (argumento.isEmpty()) {
+                    append("Uso: mkdir <nombre>\n");
+                    break;
+                }
+                append(comandLogic.cmdMkdir(argumento) + "\n");
                 break;
             case "mfile":
-                comandLogic.cmdMfile(argumentos[0].toLowerCase());
+                if (argumento.isEmpty()) {
+                    append("Uso: mfile <nombre.ext>\n");
+                    break;
+                }
+                append(comandLogic.cmdMfile(argumento) + "\n");
                 break;
             case "rm":
-                comandLogic.cmdRm(argumentos[0].toLowerCase());
+                if (argumento.isEmpty()) {
+                    append("Uso: rm <nombre>\n");
+                    break;
+                }
+                append(comandLogic.cmdRm(argumento) + "\n");
+                break;
+            case "wr":
+                if (argumento.isEmpty()) {
+                    append("Uso: wr <archivo.ext>\n");
+                    break;
+                }
+                if (!comandLogic.verificarExistencia(argumento)) {
+                    append("El archivo '" + argumento + "' no existe.\n");
+                    break;
+                }
+                archivoEscritura = argumento;
+                modoEscritura = true;
+                ultimaPosicionEscritura = doc.getLength();
+                append("Escribiendo en " + argumento + ". Escriba EXIT para terminar.\n");
+                promptStartPosition = doc.getLength();
                 break;
             case "rd":
+                if (argumento.isEmpty()) {
+                    append("Uso: rd <archivo.ext>\n");
+                    break;
+                }
+                if (!comandLogic.verificarExistencia(argumento)) {
+                    append("El archivo '" + argumento + "' no existe.\n");
+                    break;
+                }
+                append(comandLogic.leerRd(argumento));
+                break;
+            default:
+                append("'" + comando + "' no se reconoce como un comando.\n");
+                break;
         }
     }
 }

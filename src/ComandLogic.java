@@ -125,14 +125,15 @@ public class ComandLogic {
         return soloHora;
     }
     
-    public void escribirWr(String nombre, String texto){
+    public String escribirWr(String nombre, String texto){
         File archivo = new File(ruta, nombre);
         try{
             FileWriter escritor=new FileWriter(archivo, true);
             escritor.write(texto + System.lineSeparator());
             escritor.close();
+            return "";
         } catch(IOException e){
-            System.out.println("Error al escribir: " + e.getMessage());
+            return "Error al escribir: " + e.getMessage();
         }
     }
     
