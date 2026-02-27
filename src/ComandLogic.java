@@ -16,10 +16,10 @@ import java.io.FileReader;
 
 public class ComandLogic {
     private File ruta=null;
-    
-    public void setFile(){
-        ruta=new File(System.getProperty("user.home"));
+    public ComandLogic() {
+        ruta = new File(System.getProperty("user.home"));
     }
+    
     
     public String cmdMkdir(String nombre){
         if(nombre.isEmpty())
@@ -72,12 +72,25 @@ public class ComandLogic {
     }
     public String cmdCd(String nombre){
         if (nombre.isEmpty()) return "Uso: Cd <nombre carpeta>";
-        File newRuta=new File(ruta, nombre);
-        if (newRuta.exists() && newRuta.isDirectory()){
-            ruta=newRuta;
-            return "";
+        
+        if (nombre.equals("..")) {
+            return cmdBack();
         }
-        return "No se encontro la carpeta "+nombre+".";
+        
+        File newRuta = new File(ruta, nombre);
+        
+        try {
+            File canonicalRuta = newRuta.getCanonicalFile();
+            
+            if (canonicalRuta.exists() && canonicalRuta.isDirectory()) {
+                ruta = canonicalRuta;
+                return "";
+            } else {
+                return "No se encontro la carpeta "+nombre+".";
+            }
+        } catch (IOException e) {
+            return "No se encontro la carpeta "+nombre+".";
+        }
     }
     public String cmdBack(){
         File parent = ruta.getParentFile();
@@ -147,7 +160,9 @@ public class ComandLogic {
     }
     
     
-    
+    public String getRuta(){
+        return ruta.getAbsolutePath();
+    }
     
     
     

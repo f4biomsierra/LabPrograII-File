@@ -9,9 +9,13 @@ public class ConsolaPanel extends JPanel {
     private JTextPane console;
     private StyledDocument doc;
     private String actualRoute;
+    private ComandLogic comandLogic;
 
-    public ConsolaPanel() {
+    public ConsolaPanel(ComandLogic comandLogic) {
+        this.comandLogic = comandLogic;
         setLayout(new java.awt.BorderLayout());
+        actualRoute = comandLogic.getRuta();
+        System.out.println(actualRoute);
         console = new JTextPane();
         console.setBackground(Color.BLACK);
         console.setForeground(Color.WHITE);
@@ -23,8 +27,6 @@ public class ConsolaPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(console);
         scroll.setBorder(null);
         add(scroll, java.awt.BorderLayout.CENTER);
-
-        actualRoute = "C:\\Program Files\\Java";
 
         console.addKeyListener(new KeyListener() {
             @Override
@@ -95,7 +97,49 @@ public class ConsolaPanel extends JPanel {
     }
 
     private void manejarComando(String comando) {
-        // Por ahora solo hace return para simular que se ejecutó el comando
-        return;
+        if (comando.trim().isEmpty()) {
+            return;
+        }
+        
+        String[] partes = comando.split(" ");
+        String comandoPrincipal = partes[0].toLowerCase();
+        String[] argumentos = new String[partes.length - 1];
+        if (argumentos.length > 0) {
+            System.arraycopy(partes, 1, argumentos, 0, argumentos.length);
+        }
+        
+        switch (comandoPrincipal) {
+            case "cd":
+                if (argumentos.length == 0 || argumentos[0].isEmpty()) {
+                    append("Uso: cd <nombre carpeta>\n");
+                    break;
+                }
+                String resultado = comandLogic.cmdCd(argumentos[0]);
+                if (resultado.isEmpty()) {
+                    actualRoute = comandLogic.getRuta();
+                } else {
+                    append(resultado + "\n");
+                }
+                break;
+            case "dir":
+                append(comandLogic.cmdDir().toLowerCase());
+                break;
+            case "date":
+                comandLogic.cmdDate().toLowerCase();
+                break;
+            case "hora":
+                comandLogic.cmdHora().toLowerCase();
+                break;
+            case "mkdir":
+                comandLogic.cmdMkdir(argumentos[0].toLowerCase());
+                break;
+            case "mfile":
+                comandLogic.cmdMfile(argumentos[0].toLowerCase());
+                break;
+            case "rm":
+                comandLogic.cmdRm(argumentos[0].toLowerCase());
+                break;
+            case "rd":
+        }
     }
 }
